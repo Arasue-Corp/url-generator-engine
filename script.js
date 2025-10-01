@@ -1,39 +1,48 @@
-// 1. Instalar dependencias: npm install express axios cors
+// 1. Importar los paquetes necesarios
 const express = require('express');
 const axios = require('axios');
-const cors = require('cors'); // ¡Importante!
+const cors = require('cors');
 
+// 2. Inicializar la aplicación de Express
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000; // Render usa la variable de entorno PORT
 
+// --- Bloque de Depuración ---
+// Este middleware se ejecuta para CADA petición que llega al servidor.
+// Su única función es imprimir en la consola (los logs de Render) la cabecera 'origin'.
 app.use((req, res, next) => {
-  // Imprime en los logs de Render la cabecera 'origin' que llega en cada petición.
-  console.log('Request received from origin:', req.headers.origin);
-  next();
+  console.log('--> Request received from origin:', req.headers.origin);
+  next(); // Llama a la siguiente función en la cadena (en este caso, cors)
 });
+// ----------------------------
 
-// 2. Configurar CORS en tu proxy
-// Esto le dirá al navegador que tu página de GitHub Pages tiene permiso para llamar a este proxy.
+// 3. Configurar CORS
+// Mantenemos tu configuración original. El log de arriba nos dirá si es correcta o no.
 app.use(cors({
-  origin: 'https://arasue-corp.github.io/URL-generator-insurtech' // ¡Pon aquí la URL de tu GitHub Pages!
+  origin: 'https://arasue-corp.github.io/URL-generator-insurtech'
 }));
 
-// 3. Crear la ruta que llamará a la API real
+// 4. Definir la ruta principal del proxy
 app.get('/get-bridge-url', async (req, res) => {
   try {
+    // La URL de la API externa a la que queremos llamar
     const apiUrl = 'https://www.itcratingservices.com/webservices/itcrateengineapi/api/CarrierBridges/be7833c2-9c83-4596-b03a-bae6e7fa0d13';
     
-    // El proxy llama a la API. No hay CORS aquí.
+    console.log('Calling external API...');
     const response = await axios.get(apiUrl);
+    console.log('API call successful.');
     
-    // El proxy envía la respuesta de vuelta a tu frontend.
+    // Devolvemos los datos de la API externa a nuestro frontend
     res.json(response.data);
 
   } catch (error) {
+    console.error('Error calling external API:', error.message);
+    // Si hay un error, lo enviamos al frontend para que sepa qué pasó
     res.status(500).json({ message: 'Error al contactar la API externa', details: error.message });
   }
 });
 
+// 5. Iniciar el servidor
 app.listen(PORT, () => {
-  console.log(`Servidor proxy corriendo en el puerto ${PORT}`);
+  console.log(`Server is running and listening on port ${PORT}`);
 });
