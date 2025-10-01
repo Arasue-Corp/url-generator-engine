@@ -6,6 +6,12 @@ const cors = require('cors'); // ¡Importante!
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use((req, res, next) => {
+  // Imprime en los logs de Render la cabecera 'origin' que llega en cada petición.
+  console.log('Request received from origin:', req.headers.origin);
+  next();
+});
+
 // 2. Configurar CORS en tu proxy
 // Esto le dirá al navegador que tu página de GitHub Pages tiene permiso para llamar a este proxy.
 app.use(cors({
