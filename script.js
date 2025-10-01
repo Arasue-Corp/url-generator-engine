@@ -19,7 +19,7 @@ app.use((req, res, next) => {
 // 3. Configurar CORS
 // Mantenemos tu configuración original. El log de arriba nos dirá si es correcta o no.
 app.use(cors({
-  origin: 'https://arasue-corp.github.io/URL-generator-insurtech'
+  origin: 'https://arasue-corp.github.io'
 }));
 
 // 4. Definir la ruta principal del proxy
