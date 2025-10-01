@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 // 2. Configurar CORS en tu proxy
 // Esto le dirá al navegador que tu página de GitHub Pages tiene permiso para llamar a este proxy.
 app.use(cors({
-  origin: 'https://arasue-corp.github.io/URL-generator-insurtech/' // ¡Pon aquí la URL de tu GitHub Pages!
+  origin: 'https://arasue-corp.github.io/URL-generator-insurtech' // ¡Pon aquí la URL de tu GitHub Pages!
 }));
 
 // 3. Crear la ruta que llamará a la API real
