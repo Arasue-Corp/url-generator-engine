@@ -1,48 +1,48 @@
-// 1. Importar los paquetes necesarios
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 
-// 2. Inicializar la aplicación de Express
 const app = express();
-const PORT = process.env.PORT || 3000; // Render usa la variable de entorno PORT
+const PORT = process.env.PORT || 3000;
 
-// --- Bloque de Depuración ---
-// Este middleware se ejecuta para CADA petición que llega al servidor.
-// Su única función es imprimir en la consola (los logs de Render) la cabecera 'origin'.
-app.use((req, res, next) => {
-  console.log('--> Request received from origin:', req.headers.origin);
-  next(); // Llama a la siguiente función en la cadena (en este caso, cors)
-});
-// ----------------------------
-
-// 3. Configurar CORS
-// Mantenemos tu configuración original. El log de arriba nos dirá si es correcta o no.
+// Configuración de CORS que ya sabemos que funciona
 app.use(cors({
   origin: 'https://arasue-corp.github.io'
 }));
 
-// 4. Definir la ruta principal del proxy
 app.get('/get-bridge-url', async (req, res) => {
+  const apiUrl = 'https://www.itcratingservices.com/webservices/itcrateengineapi/api/CarrierBridges/be7833c2-9c83-4596-b03a-bae6e7fa0d13';
+
   try {
-    // La URL de la API externa a la que queremos llamar
-    const apiUrl = 'https://www.itcratingservices.com/webservices/itcrateengineapi/api/CarrierBridges/be7833c2-9c83-4596-b03a-bae6e7fa0d13';
+    // Hacemos la llamada a la API, pero le decimos a axios que NO siga las redirecciones.
+    await axios.get(apiUrl, {
+      maxRedirects: 0 // Esto es clave: previene que axios siga la redirección.
+    });
     
-    console.log('Calling external API...');
-    const response = await axios.get(apiUrl);
-    console.log('API call successful.');
-    
-    // Devolvemos los datos de la API externa a nuestro frontend
-    res.json(response.data);
+    // Si la llamada tiene éxito sin redirigir (lo cual es improbable), envía un mensaje.
+    res.status(500).json({ message: 'La API no respondió con una redirección como se esperaba.' });
 
   } catch (error) {
-    console.error('Error calling external API:', error.message);
-    // Si hay un error, lo enviamos al frontend para que sepa qué pasó
-    res.status(500).json({ message: 'Error al contactar la API externa', details: error.message });
+    // El error esperado es que axios falle porque recibió una redirección (códigos 3xx).
+    // Podemos verificar si el error contiene la respuesta y la cabecera 'location'.
+    if (error.response && error.response.headers.location) {
+      
+      // ¡Éxito! Aquí está la URL que queremos.
+      const redirectUrl = error.response.headers.location;
+      console.log('Redirect URL captured:', redirectUrl);
+      
+      // Enviamos la URL capturada al frontend en un objeto JSON.
+      // Usamos una clave como "bridgeUrl" para que tu frontend la pueda procesar.
+      res.json({ bridgeUrl: redirectUrl });
+
+    } else {
+      // Si el error es por otra cosa (la API está caída, etc.), lo registramos.
+      console.error('An unexpected error occurred:', error.message);
+      res.status(500).json({ message: 'Ocurrió un error inesperado al llamar a la API.', details: error.message });
+    }
   }
 });
 
-// 5. Iniciar el servidor
 app.listen(PORT, () => {
   console.log(`Server is running and listening on port ${PORT}`);
 });
